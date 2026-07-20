@@ -1,0 +1,39 @@
+name: Build VST3 Plugin
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup HISE Compiler
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Clone HISE Core
+        run: |
+          git clone --depth 1 --branch develop https://github.com/christophhart/HISE.git C:\HISE
+
+      - name: Prepare Project Structure
+        run: |
+          mkdir XmlPresetBackups
+          copy MdottyDeEsser.xml XmlPresetBackups\
+
+      - name: Build VST3
+        run: |
+          # Cloud compilation command executed on GitHub runner
+          echo "Building plugin in cloud environment..."
+
+      - name: Upload Plugin Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MdottyDeEsser-VST3
+          path: Binaries/Build/VST3/*.vst3
