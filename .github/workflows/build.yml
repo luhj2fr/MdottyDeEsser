@@ -16,13 +16,13 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Setup HISE Source
+      - name: Clone HISE Source into Cloud Runner
         run: |
-          git clone --depth 1 --branch develop https://github.com/christophhart/HISE.git C:\HISE
+          git clone --depth 1 --branch develop https://github.com/christophhart/HISE.git ${{ github.workspace }}/HISE
 
-      - name: Build HISE Standalone Executable
+      - name: Build HISE Executable in Cloud
         run: |
-          cd C:\HISE\projects\standalone\Builds\VisualStudio2022
+          cd ${{ github.workspace }}/HISE/projects/standalone/Builds/VisualStudio2022
           msbuild.exe "HISE Standalone.sln" /p:Configuration="Release" /p:Platform="x64" /m
 
       - name: Prepare Project Structure
@@ -32,9 +32,9 @@ jobs:
 
       - name: Export VST3 Plugin
         run: |
-          C:\HISE\projects\standalone\Builds\VisualStudio2022\x64\Release\HISE.exe export_ci "${{ github.workspace }}/XmlPresetBackups/MdottyDeEsser.xml" -t:effect -p:VST3 -a:x64
+          ${{ github.workspace }}/HISE/projects/standalone/Builds/VisualStudio2022/x64/Release/HISE.exe export_ci "${{ github.workspace }}/XmlPresetBackups/MdottyDeEsser.xml" -t:effect -p:VST3 -a:x64
 
-      - name: Upload VST3 Plugin
+      - name: Upload VST3 Plugin Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MdottyDeEsser-VST3
