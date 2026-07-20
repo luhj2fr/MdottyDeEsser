@@ -7,32 +7,26 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup HISE Compiler
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Clone HISE Core
+      - name: Setup HISE Environment
         run: |
           git clone --depth 1 --branch develop https://github.com/christophhart/HISE.git C:\HISE
 
-      - name: Prepare Project Structure
+      - name: Prepare Project Folders
         run: |
           mkdir XmlPresetBackups
           copy MdottyDeEsser.xml XmlPresetBackups\
 
-      - name: Build VST3
+      - name: Compile VST3 via HISE CLI
         run: |
-          # Cloud compilation command executed on GitHub runner
-          echo "Building plugin in cloud environment..."
+          C:\HISE\tools\HISE.exe export_ci "${{ github.workspace }}/XmlPresetBackups/MdottyDeEsser.xml" -t:effect -p:VST3 -a:x64
 
-      - name: Upload Plugin Artifact
+      - name: Upload VST3 Plugin
         uses: actions/upload-artifact@v4
         with:
           name: MdottyDeEsser-VST3
