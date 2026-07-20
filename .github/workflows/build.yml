@@ -7,34 +7,20 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
+      - name: Set up HISE CLI Compiler
+        uses: christophhart/hise-action@v1
+        with:
+          project-path: '.'
+          export-type: 'effect'
+          format: 'vst3'
 
-      - name: Clone HISE Source into Cloud Runner
-        run: |
-          git clone --depth 1 --branch develop https://github.com/christophhart/HISE.git ${{ github.workspace }}/HISE
-
-      - name: Build HISE Executable in Cloud
-        run: |
-          cd ${{ github.workspace }}/HISE/projects/standalone/Builds/VisualStudio2022
-          msbuild.exe "HISE Standalone.sln" /p:Configuration="Release" /p:Platform="x64" /m
-
-      - name: Prepare Project Structure
-        run: |
-          mkdir XmlPresetBackups
-          copy MdottyDeEsser.xml XmlPresetBackups\
-
-      - name: Export VST3 Plugin
-        run: |
-          ${{ github.workspace }}/HISE/projects/standalone/Builds/VisualStudio2022/x64/Release/HISE.exe export_ci "${{ github.workspace }}/XmlPresetBackups/MdottyDeEsser.xml" -t:effect -p:VST3 -a:x64
-
-      - name: Upload VST3 Plugin Artifact
+      - name: Upload VST3 Plugin
         uses: actions/upload-artifact@v4
         with:
           name: MdottyDeEsser-VST3
