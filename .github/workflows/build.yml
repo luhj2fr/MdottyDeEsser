@@ -7,24 +7,32 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup HISE Environment
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup HISE Source
         run: |
           git clone --depth 1 --branch develop https://github.com/christophhart/HISE.git C:\HISE
 
-      - name: Prepare Project Folders
+      - name: Build HISE Standalone Executable
+        run: |
+          cd C:\HISE\projects\standalone\Builds\VisualStudio2022
+          msbuild.exe "HISE Standalone.sln" /p:Configuration="Release" /p:Platform="x64" /m
+
+      - name: Prepare Project Structure
         run: |
           mkdir XmlPresetBackups
           copy MdottyDeEsser.xml XmlPresetBackups\
 
-      - name: Compile VST3 via HISE CLI
+      - name: Export VST3 Plugin
         run: |
-          C:\HISE\tools\HISE.exe export_ci "${{ github.workspace }}/XmlPresetBackups/MdottyDeEsser.xml" -t:effect -p:VST3 -a:x64
+          C:\HISE\projects\standalone\Builds\VisualStudio2022\x64\Release\HISE.exe export_ci "${{ github.workspace }}/XmlPresetBackups/MdottyDeEsser.xml" -t:effect -p:VST3 -a:x64
 
       - name: Upload VST3 Plugin
         uses: actions/upload-artifact@v4
