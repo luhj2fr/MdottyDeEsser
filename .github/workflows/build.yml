@@ -7,44 +7,25 @@ on:
     branches: [ main ]
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: Linux
-            cmake-args: -DCMAKE_BUILD_TYPE=Release
-          - os: macos-latest
-            name: macOS
-            cmake-args: -DCMAKE_BUILD_TYPE=Release
-          - os: windows-latest
-            name: Windows
-            cmake-args: -DCMAKE_BUILD_TYPE=Release
-    runs-on: ${{ matrix.os }}
-    name: Build ${{ matrix.name }}
+    runs-on: windows-latest
+    name: Build Windows
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup build directory
-        run: cmake -B build ${{ matrix.cmake-args }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build --config Release --parallel 4
       - name: Package
         shell: bash
         run: |
           mkdir -p dist
-          if [ "${{ runner.os }}" == "Linux" ]; then
-            cp -r build/MdottyDeEsser_artefacts/Release/VST3/* dist/ || true
-          elif [ "${{ runner.os }}" == "macOS" ]; then
-            cp -r build/MdottyDeEsser_artefacts/Release/VST3/* dist/ || true
-          elif [ "${{ runner.os }}" == "Windows" ]; then
-            mkdir -p dist
-            cp -r build/MdottyDeEsser_artefacts/Release/VST3/* dist/ || true
-          fi
+          cp -r build/MdottyDeEsser_artefacts/Release/VST3/* dist/ || true
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MdottyDeEsser-${{ matrix.name }}
+          name: MdottyDeEsser-Windows
           path: dist
   release:
     needs: build
