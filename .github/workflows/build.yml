@@ -1,0 +1,67 @@
+name: VST3 Build & Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: Linux
+            cmake-args: -DCMAKE_BUILD_TYPE=Release
+          - os: macos-latest
+            name: macOS
+            cmake-args: -DCMAKE_BUILD_TYPE=Release
+          - os: windows-latest
+            name: Windows
+            cmake-args: -DCMAKE_BUILD_TYPE=Release
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.name }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup build directory
+        run: cmake -B build ${{ matrix.cmake-args }}
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            cp -r build/MdottyDeEsser_artefacts/Release/VST3/* dist/ || true
+          elif [ "${{ runner.os }}" == "macOS" ]; then
+            cp -r build/MdottyDeEsser_artefacts/Release/VST3/* dist/ || true
+          else
+            xcopy build\MdottyDeEsser_artefacts\Release\VST3\* dist\ /E /I /Y || true
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: MdottyDeEsser-${{ matrix.name }}
+          path: dist
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: '**/MdottyDeEsser*'
